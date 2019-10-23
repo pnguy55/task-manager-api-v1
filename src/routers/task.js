@@ -60,11 +60,18 @@ router.patch('/tasks/:id', async (req, res) => {
     const _id = req.params.id
 
     try {
-        const task_update = await Task.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
-        if (!task_update) {
-            return res.status(404).send()
+        const task = await Task.findById(_id)
+
+        updates.forEach((update) => task[update] = req.body[update])
+
+        await task.save()
+
+        // Direct communication with server is no go for mongoose middleware
+        // const task_update = await Task.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
+        if (!task) {
+            return res.status(404).send(task)
         }
-        res.send(task_update)
+        res.send(task)
     } catch (e) {
         res.status(400).send()
     }

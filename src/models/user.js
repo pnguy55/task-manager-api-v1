@@ -1,10 +1,8 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
+const bcrypt = require('bcrypt')
 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
-const User = mongoose.model('User', {
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -12,6 +10,7 @@ const User = mongoose.model('User', {
     },
     email: {
         type: String,
+        unique: true,
         required: true,
         lowercase: true,
         trim: true,
@@ -42,5 +41,41 @@ const User = mongoose.model('User', {
         }
      }
 })
+
+// Make static function accessible by the router to search the database for a user
+userSchema.statics.findByCredentials = async (email, password) => {
+    //searches for user by the email
+    const user = await User.findOne({ email })
+    if (!user) {
+        throw new Error('Unable to log in')
+    }
+
+    // Checks the password for a match
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+        throw new Error('Unable to log in')
+    }
+
+    return user
+}
+
+
+// Pre does something before saving to the database, post does it after
+// Important to not use arrow function because it needs to be bound by this
+// Hash the plain text password before saving
+userSchema.pre('save', async function (next) {
+    const user = this
+
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, 8)
+    }
+
+    next()
+})
+
+// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
+// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
+// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
+const User = mongoose.model('User', userSchema)
 
 module.exports = User
