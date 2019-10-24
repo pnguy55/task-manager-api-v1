@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -39,8 +40,26 @@ const userSchema = new mongoose.Schema({
                 throw new Error('Password cannot contain the phrase "password".')
             }
         }
-     }
+     },
+     tokens: [{
+         token: {
+             type: String,
+             required: true
+         }
+     }]
 })
+
+userSchema.methods.generateAuthToken = async function () {
+    const user = this
+    // this saves the signed web token, and also converts the user id to a string as that's what
+    // jwt is expecting
+    const token = jwt.sign({ _id: user.id.toString()}, 'codephony')
+    // push token to special token array above and save to DB
+    user.tokens.push({ token })
+    await user.save()
+
+    return token
+}
 
 // Make static function accessible by the router to search the database for a user
 userSchema.statics.findByCredentials = async (email, password) => {

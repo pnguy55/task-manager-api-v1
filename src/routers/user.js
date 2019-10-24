@@ -13,7 +13,10 @@ router.post('/users', async (req, res) => {
 
     try {
         await user.save()
-        res.status(201).send(user)
+
+        await user.generateAuthToken()
+
+        res.status(201).send({ user })
     } catch (e) {
         res.status(400).send(e)
     }
@@ -22,9 +25,13 @@ router.post('/users', async (req, res) => {
 // The log-in endpoint
 router.post('/users/login', async (req, res) => {
     try {
+        // runs functions that get user info and token info from the server
         const user = await User.findByCredentials(req.body.email, req.body.password)
+        await user.generateAuthToken()
         // if an error isn't thrown by the findByCredentials static function it will run next
-        res.send(user)
+        // sends user info and token to the client from the server
+        
+        res.send({ user })
     } catch (e) {
         res.status(400).send()
     }
@@ -126,7 +133,7 @@ router.delete('/users/:id', async (req,res) => {
     const _id = req.params.id
 
     try {
-        const delete_user = await User.findByIdAndDelete(_id)
+        const user = await User.findByIdAndDelete(_id)
 
         if (!user) {
             return res.status(404).send()

@@ -1,5 +1,5 @@
 const express = require('express')
-const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 require('./db/mongoose')
 
 // Routes
@@ -9,6 +9,10 @@ const taskRouter = require('./routers/task')
 const app = express()
 const port = process.env.PORT || 3000
 
+app.use((req, res, next) => {
+    // Prints HTTP method used, and path gets the path
+    console.log(req.method, req.path)
+})
 //auto parse JSON
 app.use(express.json())
 
@@ -21,14 +25,13 @@ app.listen(port, () => {
 })
 
 const myFunction = async () => {
-    const password = 'Red12345!'
-    const hashedPassword = await bcrypt.hash(password, 8)
+    // the random string is a secret key you provide
+    const token = jwt.sign({ _id: 'abc1234!dd' }, 'codephony', { expiresIn: '7 days' })
 
-    console.log(password)
-    console.log(hashedPassword)
+    // console.log(token)
 
-    const isMatch = await bcrypt.compare(password, hashedPassword)
-    console.log(isMatch)
+    const data = jwt.verify(token, 'codephony')
+    // console.log(data)
 }
 
 myFunction()

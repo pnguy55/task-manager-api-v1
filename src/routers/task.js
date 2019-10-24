@@ -80,13 +80,13 @@ router.patch('/tasks/:id', async (req, res) => {
 router.delete('/tasks/:id', async (req, res) => {
     const _id = req.params.id
 
-    const deleted_task = Task.findByIdAndDelete(_id)
+    const task = Task.findByIdAndDelete(_id)
     try {
-        if (!deleted_task) {
+        if (!task) {
             return res.status(404).send()
         }
 
-        res.send(deleted_task)
+        res.send(task)
     } catch (e) {
         res.status(500).send()
     }
