@@ -49,11 +49,27 @@ const userSchema = new mongoose.Schema({
      }]
 })
 
+// HIDE PRIVATE USER DATA HERE HIDE PRIVATE USER DATA HERE HIDE PRIVATE USER DATA HERE
+// Not an arrow function because we are using this, this specific toJSON function needs to
+// match up, it'll perform this function every time user is returned and delete what we want from the object
+// while no having to ever call this function explicitely
+userSchema.methods.toJSON = function () {
+    const user = this
+    // strips away mongoose stuff and gives us back raw object data
+    const userObject = user.toObject()
+
+    delete userObject.password
+    delete userObject.tokens
+
+    return userObject
+}
+
+// function to make a auth token
 userSchema.methods.generateAuthToken = async function () {
     const user = this
     // this saves the signed web token, and also converts the user id to a string as that's what
     // jwt is expecting
-    const token = jwt.sign({ _id: user.id.toString()}, 'codephony')
+    const token = jwt.sign({ _id: user.id.toString()}, 'codephony', { expiresIn: '2 days' })
     // push token to special token array above and save to DB
     user.tokens.push({ token })
     await user.save()

@@ -1,8 +1,10 @@
 const express = require('express')
 // Data model
 const User = require('../models/user')
+const auth = require('../middleware/auth')
 
 const router = new express.Router()
+
 
 router.get('/test', (req, res) => {
     res.send('From a new file')
@@ -14,9 +16,9 @@ router.post('/users', async (req, res) => {
     try {
         await user.save()
 
-        await user.generateAuthToken()
+        const token = await user.generateAuthToken()
 
-        res.status(201).send({ user })
+        res.status(201).send({ user, token })
     } catch (e) {
         res.status(400).send(e)
     }
@@ -27,32 +29,44 @@ router.post('/users/login', async (req, res) => {
     try {
         // runs functions that get user info and token info from the server
         const user = await User.findByCredentials(req.body.email, req.body.password)
-        await user.generateAuthToken()
+        const token = await user.generateAuthToken()
         // if an error isn't thrown by the findByCredentials static function it will run next
         // sends user info and token to the client from the server
         
-        res.send({ user })
+        res.send({ user, token })
     } catch (e) {
         res.status(400).send()
     }
 })
 
-router.get('/users', async (req, res) => {
-    
+router.post('/users/logout', auth, async (req, res) => {
     try {
-        const users = await User.find({})
-        res.status(200).send(users)
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token
+        })
+
+        await req.user.save()
+
+        res.send()
     } catch (e) {
         res.status(500).send()
-    }       
+    }
+})
 
-    // Promise version
-    // User.find({}).then((users) => {
-    //     res.status(200).send(users)
-    // }).catch((e) => {
-    //     // change status code to 500 for internal server error and no need to send back error msg
-    //     res.status(500).send()
-    // }) 
+router.post('/users/logoutall', auth, async (req, res) => {
+    try{
+        req.user.tokens = []
+
+        req.user.save()
+
+        res.send()
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+router.get('/users/me', auth, async (req, res) => {
+    // Return logged in user's info
+    res.status(200).send(req.user)
 })
 
 // find user by id
