@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Task = require('./task')
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -47,7 +48,19 @@ const userSchema = new mongoose.Schema({
              required: true
          }
      }]
+}, {
+    // include this timestamp property as a seperate arguement from the main object argument above
+    timestamps: true
 })
+
+// set up relationship to tasks without making a big array to store all tasks, and allows you to use 
+// the populate function as if you had an object on user that referred to tasks
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
 
 // HIDE PRIVATE USER DATA HERE HIDE PRIVATE USER DATA HERE HIDE PRIVATE USER DATA HERE
 // Not an arrow function because we are using this, this specific toJSON function needs to
@@ -108,9 +121,16 @@ userSchema.pre('save', async function (next) {
     next()
 })
 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
-// EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER EXAMPLE SAVING OF NEW USER 
+// Middleware to delete user tasks when user is removed with only the owner field, remember to load in Task model
+userSchema.pre('remove', async function (next) {
+    const user = this
+
+    await Task.deleteMany({ owner: user._id })
+
+    next()
+})
+
+
 const User = mongoose.model('User', userSchema)
 
 module.exports = User

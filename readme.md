@@ -32,7 +32,8 @@ basics of full stack web app
 1) set up a DB to test on
 2) set up a postman to test endpoints
 3) make data models with mongoose and using a schema to perform operations before and after saving data to DB, export the data models into index for use
-4) Import data models into routers and create router using express, then edit endpoints on the routers
+4) Import data models into routers and create router using express, import them all into index, then edit endpoints on the routers
+5) remember to check out package.json for dev scripts
 5) Create login with the following: simply put - 
     [sign-in/find account by email, compare password hash, generate+sign web token, save to user object, create authentication ]
     a) Make sure emails are unique
@@ -40,8 +41,8 @@ basics of full stack web app
     c) run that static function in the router and make it send back the user info 
     d) download and implement jsonwebtoken npm module by creating and saving tokens to the user model
        upon sign-up and log-in
-    e) create authentication middleware and import into user.js
-    f) that middleware will authenticate before running the routes specified
+    e) create authentication middleware, auth.js, and import into user.js
+    f) that middleware will authenticate before running the routes specified (continue after setting up post man)
 
 6) At this point it is important to have postman set up
     a) Set up environments for dev and prod
@@ -57,3 +58,10 @@ EXAMPLE TESTING CODE EXAMPLE TESTING CODE EXAMPLE TESTING CODE EXAMPLE TESTING C
         pm.environment.set('authToken', pm.response.json().token)
     } -->
 EXAMPLE TESTING CODE EXAMPLE TESTING CODE EXAMPLE TESTING CODE EXAMPLE TESTING CODE EXAMPLE TESTING
+
+g) add logout and logoutall functions, then add authentification to other endpoints, which
+   are all functions within auth
+h) make sure to use auth middleware for all endpoints so that no data is passing throught the urls
+
+7) add authentification to all endpoints of objects associated with users
+8) remember to add a function that deletes things connected to users when that user deletes their account

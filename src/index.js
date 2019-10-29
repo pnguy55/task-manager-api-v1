@@ -39,14 +39,23 @@ app.listen(port, () => {
     console.log('Server is up on port ' + port)
 })
 
-const myFunction = async () => {
-    // the random string is a secret key you provide
-    const token = jwt.sign({ _id: 'abc1234!dd' }, 'codephony', { expiresIn: '7 days' })
+const Task = require('./models/task')
+const User = require('./models/user')
 
-    // console.log(token)
+const test_relationships_between_task_and_user = async () => {
+    // find task by its id
+    const task = await Task.findById('5db74122550a6323d4327b67')
+    // wait for the database to respond then populate the task owner object with properties from owner
+    // which is really just the user object that the owner which upon creation mongoose automatically
+    // gives it a relationship to a specific owner already
+    await task.populate('owner')
+    console.log(task.owner)
 
-    const data = jwt.verify(token, 'codephony')
-    // console.log(data)
+    // an example doing the opposite of the above section
+    const user = await User.findById('5db740f7550a6323d4327b64')
+    // utilizes the virtual function from userSchema to find the user's tasks
+    await user.populate('tasks').execPopulate()
+    console.log(user.tasks)
 }
 
-myFunction()
+// test_relationships_between_task_and_user()

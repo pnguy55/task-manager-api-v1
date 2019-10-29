@@ -1,13 +1,41 @@
 const express = require('express')
 // Data model
 const Task = require('../models/task')
-
+const auth = require('../middleware/auth')
 const router = new express.Router()
 
-router.get('/tasks', async (req, res) => {
+router.post('/tasks', auth, async (req, res) => {
+    // takes info from normal request body
+    //const task = new Task(req.body)
+
+    const task = new Task({
+        ...req.body,
+        owner: req.user._id
+    })
 
     try {
-        const list_of_tasks = await Task.find({})
+        const saveTask = await task.save()
+        res.status(201).send(task)
+    } catch (e) {
+        res.status(400).send(e)
+    }
+    //Promise version
+
+    // task.save().then(() => {
+    //     // success error code followed by the task
+    //     res.status(201).send(task)
+    // }).catch((e) => {
+    //     res.status(400).send(e)
+    // })
+})
+
+router.get('/tasks', auth, async (req, res) => {
+    try {
+        // finds all tasks with the correct owner and lists them
+        const list_of_tasks = await Task.find({owner: req.user._id})
+        //or
+        // await req.user.populate('tasks').execPopulate()
+        // res.send(req.user.tasks)
         res.send(list_of_tasks)
     } catch (e) {
         res.send(500).send()
@@ -21,16 +49,17 @@ router.get('/tasks', async (req, res) => {
     // }) 
 })
 
-router.get('/tasks/:id', async (req, res) => {
+router.get('/tasks/:id', auth, async (req, res) => {
     const _id = req.params.id
-
+    const owner = req.user._id
     try {
-        const find_task = await Task.find({ _id })
-        if (!find_task){
+        const task = await Task.findOne({ _id, owner })
+
+        if (!task){
             return res.status(404).send()
         }
 
-        res.send(find_task)
+        res.send(task)
     } catch (e) {
         res.status(500).send()
     }
@@ -47,7 +76,7 @@ router.get('/tasks/:id', async (req, res) => {
     // }) 
 })
 
-router.patch('/tasks/:id', async (req, res) => {
+router.patch('/tasks/:id', auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['description', 'completed']
     const isValidOperation = updates.every((update) => {
@@ -58,30 +87,33 @@ router.patch('/tasks/:id', async (req, res) => {
         return res.status(400).send({ error: 'Invalid updates!'})
     }
     const _id = req.params.id
+    const owner = req.user._id
 
     try {
-        const task = await Task.findById(_id)
-
-        updates.forEach((update) => task[update] = req.body[update])
-
-        await task.save()
+        const task = await Task.findOne({ _id, owner })
 
         // Direct communication with server is no go for mongoose middleware
         // const task_update = await Task.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
+        
+        // the check for valid task must go before the actual update below
         if (!task) {
-            return res.status(404).send(task)
+            return res.status(404).send()
         }
+        updates.forEach((update) => task[update] = req.body[update])
+        await task.save()
         res.send(task)
     } catch (e) {
         res.status(400).send()
     }
 })
 
-router.delete('/tasks/:id', async (req, res) => {
+router.delete('/tasks/:id', auth, async (req, res) => {
     const _id = req.params.id
+    const owner = req.user._id
 
-    const task = Task.findByIdAndDelete(_id)
     try {
+        const task = await Task.findOneAndDelete({ _id, owner })
+
         if (!task) {
             return res.status(404).send()
         }
