@@ -29,14 +29,49 @@ router.post('/tasks', auth, async (req, res) => {
     // })
 })
 
+// Return different lists
+// GET /tasks?completed=true
+// GET /tasks?limit=10&skip=10
+// GET /task?sortBy=createdAt:asc
+// GET /task?sortBy=createdAt:desc
 router.get('/tasks', auth, async (req, res) => {
+
+    const match = {}
+    let sort = {}
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true'
+    }
+    if (req.query.sortBy) {
+        sortBy = req.query.sortBy.split(':')
+
+        // Ternary operator method
+        sort[sortBy[0]] = sortBy[1] === 'desc' ? -1 : 1
+        
+        //Simpleton method
+        // if (sortBy === 'desc') {
+        //     sort = { createdAt: -1 }
+        // }
+        // if (sortBy === 'asc') {
+        //     //createdAt: 1 {this is ascending, oldest to newest}
+        //     sort = { createdAt: 1}
+        // }
+    }
+
     try {
         // finds all tasks with the correct owner and lists them
-        const list_of_tasks = await Task.find({owner: req.user._id})
+        // const list_of_tasks = await Task.find({owner: req.user._id, completed: false})
         //or
-        // await req.user.populate('tasks').execPopulate()
-        // res.send(req.user.tasks)
-        res.send(list_of_tasks)
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                request: parseInt(req.query.skip),
+                sort
+            }
+        }).execPopulate()
+        res.send(req.user.tasks)
+        // res.send(list_of_tasks)
     } catch (e) {
         res.send(500).send()
     }
