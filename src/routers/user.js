@@ -3,12 +3,32 @@ const express = require('express')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
 
+const multer = require('multer')
+const avatar_upload = multer({
+    // short for destination
+    // remove dest to pass data through to the POST function
+    // dest: 'avatars',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb) {
+        // // error msg
+        // cb(new Error('File must be a PDF'))
+        // // accept
+        // cb(undefined, true)
+        // // silently reject
+        // cb(undefined, false)
+
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)){
+            return cb(new Error('Please upload a JPG, JPEG, or a PNG file'))
+        }
+        cb(undefined, true)
+    }    
+})
+
+
 const router = new express.Router()
 
-
-router.get('/test', (req, res) => {
-    res.send('From a new file')
-})
 
 router.post('/users', async (req, res) => {
     const user = new User(req.body)
@@ -64,6 +84,21 @@ router.post('/users/logoutall', auth, async (req, res) => {
         res.status(500).send()
     }
 })
+
+
+// authenticated avatar upload
+// html img tag that will use the image binary data
+// <img src='data:iamge/jpg;base64,[insert image binary data]'/>
+router.post('/users/me/avatar', auth, avatar_upload.single('avatar'), async (req, res) => {
+        req.user.avatar = req.file.buffer
+        // remember to add async/await to wait for the file buffer to work
+        await req.user.save()
+        res.send()
+}, (error, req, res, next) => {
+    // this is how to display the error thrown by the multer middleware instead of the cryptic HTML
+    res.status(400).send({ error: error.message})
+})
+
 router.get('/users/me', auth, async (req, res) => {
     // Return logged in user's info
     res.status(200).send(req.user)
@@ -156,6 +191,13 @@ router.delete('/users/delete-me', auth, async (req,res) => {
     } catch (e) {
         return res.status(500).send()
     }
+})
+
+router.delete('/users/me/delete-avatar', auth, async (req,res) => {
+    req.user.avatar = undefined
+    await req.user.save()
+
+    res.send()
 })
 
 

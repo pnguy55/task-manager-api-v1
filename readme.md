@@ -65,3 +65,5 @@ h) make sure to use auth middleware for all endpoints so that no data is passing
 
 7) add authentification to all endpoints of objects associated with users
 8) remember to add a function that deletes things connected to users when that user deletes their account
+9) check out how to use url query params in the /tasks endpoint
+10) add profile pic addition

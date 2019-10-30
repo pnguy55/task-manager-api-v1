@@ -9,6 +9,18 @@ const taskRouter = require('./routers/task')
 const app = express()
 const port = process.env.PORT || 3000
 
+// typically this import is at the top, just put here for ease of example
+const multer = require('multer')
+const upload = multer({
+    // short for destination
+    dest: 'images'
+})
+//multer utilizes middleware to upload a file with the key of upload
+app.post('/upload', upload.single('upload'), (req,res) => {
+    res.send()
+})
+
+
 // app.use((req, res, next) => {
 //     // Prints HTTP method used, and path gets the path
 //     console.log(req.method, req.path)
