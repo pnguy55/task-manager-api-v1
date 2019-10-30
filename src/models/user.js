@@ -74,8 +74,10 @@ userSchema.methods.toJSON = function () {
     // strips away mongoose stuff and gives us back raw object data
     const userObject = user.toObject()
 
+    // No need for client to see this info
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
 
     return userObject
 }

@@ -32,10 +32,10 @@ basics of full stack web app
 1) set up a DB to test on
 2) set up a postman to test endpoints
 3) make data models with mongoose and using a schema to perform operations before and after saving data to DB, export the data models into index for use
-4) Import data models into routers and create router using express, import them all into index, then edit endpoints on the routers
+4) Import data models into routers and create router using express, import them all into index, then edit endpoints on the routers (mongoose, express, validator)
 5) remember to check out package.json for dev scripts
-5) Create login with the following: simply put - 
-    [sign-in/find account by email, compare password hash, generate+sign web token, save to user object, create authentication ]
+5) Create login with the following: simply put - (jsonwebtoken, bcrypt)
+    [sign-in/find account by email, compare password hash, generate+sign web token, save to user object, create authentication file, add auth middleware to routes ]
     a) Make sure emails are unique
     b) Use schema static function to provide router with a lookup function that searches DB for the account, also runs the password through a compare function that returns the user's information
     c) run that static function in the router and make it send back the user info 
@@ -43,6 +43,7 @@ basics of full stack web app
        upon sign-up and log-in
     e) create authentication middleware, auth.js, and import into user.js
     f) that middleware will authenticate before running the routes specified (continue after setting up post man)
+    g) interact with user model that passed through auth
 
 6) At this point it is important to have postman set up
     a) Set up environments for dev and prod
@@ -66,4 +67,4 @@ h) make sure to use auth middleware for all endpoints so that no data is passing
 7) add authentification to all endpoints of objects associated with users
 8) remember to add a function that deletes things connected to users when that user deletes their account
 9) check out how to use url query params in the /tasks endpoint
-10) add profile pic addition
+10) add profile pic addition (use multer + sharp)
